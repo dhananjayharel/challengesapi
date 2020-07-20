@@ -1,0 +1,51 @@
+{
+  "name": "containerMapping",
+  "plural": "containerMapping",
+  "base": "PersistedModel",
+  "idInjection": true,
+  "options": {
+    "validateUpsert": true
+  },
+  "properties": {
+    "taskId": {
+      "type": "string",
+      "default": ""
+    },
+    "containerPath": {
+      "type": "string",
+	  "default": ""
+    }
+
+},
+  "validations": [],
+  "relations": {	
+
+  },
+    "acls": [
+	 {
+      "accessType": "*",
+      "principalType": "ROLE",
+      "principalId": "$everyone",
+      "permission": "DENY"
+    },
+    {
+      "accessType": "READ",
+      "principalType": "ROLE",
+      "principalId": "$everyone",
+      "permission": "ALLOW"
+    },
+    {
+      "accessType": "*",
+      "principalType": "ROLE",
+      "principalId": "$authenticated",
+      "permission": "ALLOW"
+    }, 
+    {
+      "accessType": "WRITE",
+      "principalType": "ROLE",
+      "principalId": "$owner",
+      "permission": "ALLOW"
+    }
+  ],
+    "methods": {}
+}

@@ -1,0 +1,52 @@
+{
+  "name": "BufferedInstances",
+  "plural": "BufferedInstances",
+  "base": "PersistedModel",
+  "idInjection": true,
+  "options": {
+    "validateUpsert": true
+  },
+  "properties": {
+    "launchTime": {
+      "type": "date",
+      "defaultFn": "now"
+    },
+    "instanceId": {
+      "type": "string"
+    },
+	"instanceState": {
+      "type": "string",
+	  "default":"booting"
+    }
+
+},
+  "validations": [],
+  "relations": {},
+    "acls": [
+	 {
+      "accessType": "*",
+      "principalType": "ROLE",
+      "principalId": "$everyone",
+      "permission": "DENY"
+    },
+    {
+      "accessType": "READ",
+      "principalType": "ROLE",
+      "principalId": "$everyone",
+      "permission": "ALLOW"
+    },
+    {
+      "accessType": "*",
+      "principalType": "ROLE",
+      "principalId": "$authenticated",
+      "permission": "ALLOW"
+    }, 
+    {
+      "accessType": "WRITE",
+      "principalType": "ROLE",
+      "principalId": "$owner",
+      "permission": "ALLOW"
+    }
+  ],
+    "methods": {}
+}

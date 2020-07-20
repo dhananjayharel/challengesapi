@@ -1,0 +1,24 @@
+{
+  "db": {
+    "name": "db",
+    "connector": "memory",
+    "file": "/home/ubuntu/rdplabs_app/rdplabsapi/mydata.json"
+  },
+  "Email": {
+    "name": "Email",
+    "connector": "mail",
+    "transports": [{
+        "type": "smtp",
+        "host": "smtp.gmail.com",
+        "secure": true,
+        "port": 465,
+        "tls": {
+          "rejectUnauthorized": false
+        },
+        "auth": {
+          "user": "vilashinparadise@gmail.com",
+          "pass": ""
+        }
+      }]
+  }
+}

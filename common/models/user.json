@@ -1,0 +1,20 @@
+{
+  "name": "user",
+  "base": "User",
+  "idInjection": true,
+  "properties": {},
+  "restrictResetPasswordTokenScope": true,
+  "emailVerificationRequired": true,
+  "validations": [],
+  "relations": {},
+  "acls": [
+    {
+      "accessType": "*",
+      "principalType": "ROLE",
+      "principalId": "$everyone",
+      "permission": "ALLOW",
+      "property": "resetPasswordRequest"
+    }
+  ],
+  "methods": []
+}

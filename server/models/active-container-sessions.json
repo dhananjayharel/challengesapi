@@ -1,0 +1,59 @@
+{
+  "name": "ActiveContainerSessions",
+  "plural": "ActiveContainerSessions",
+  "base": "PersistedModel",
+  "idInjection": true,
+  "options": {
+    "validateUpsert": true
+  },
+  "properties": {
+       "taskId": {
+      "type": "string",
+	  "required":true
+    },
+    "sessionid": {
+      "type": "string",
+	   "default": ""
+    },
+	"startTime": {
+      "type": "date",
+      "defaultFn": "now"
+    },
+	"RunningContainersId":{
+	 "type":"number",
+	 "required":true
+	}
+
+},
+  "validations": [],
+  "relations": {
+   
+  },
+    "acls": [
+	 {
+      "accessType": "*",
+      "principalType": "ROLE",
+      "principalId": "$everyone",
+      "permission": "ALLOW"
+    },
+    {
+      "accessType": "READ",
+      "principalType": "ROLE",
+      "principalId": "$everyone",
+      "permission": "ALLOW"
+    },
+    {
+      "accessType": "*",
+      "principalType": "ROLE",
+      "principalId": "$everyone",
+      "permission": "ALLOW"
+    }, 
+    {
+      "accessType": "WRITE",
+      "principalType": "ROLE",
+      "principalId": "$everyone",
+      "permission": "ALLOW"
+    }
+  ],
+    "methods": {}
+}

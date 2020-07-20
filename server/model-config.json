@@ -1,0 +1,105 @@
+{
+  "_meta": {
+    "sources": [
+      "loopback/common/models",
+      "loopback/server/models",
+      "../common/models",
+      "./models"
+    ],
+    "mixins": [
+      "loopback/common/mixins",
+      "loopback/server/mixins",
+      "../common/mixins",
+      "./mixins"
+    ]
+  },
+  "User": {
+    "dataSource": "db",
+    "acls": [{
+      "principalType": "ROLE",
+      "principalId": "$everyone",
+      "permission": "ALLOW",
+      "property": "resetPasswordRequest"
+    }],
+    "options": {
+      "emailVerificationRequired": true
+    }
+  },
+  "AccessToken": {
+    "dataSource": "db",
+    "public": false
+  },
+  "ACL": {
+    "dataSource": "db",
+    "public": false
+  },
+  "RoleMapping": {
+    "dataSource": "db",
+    "public": false,
+    "options": {
+      "strictObjectIDCoercion": true
+    }
+  },
+  "Role": {
+    "dataSource": "db",
+    "public": false
+  },
+  "OnlineTest": {
+    "dataSource": "db",
+    "public": true
+  },
+  "Candidate": {
+    "dataSource": "db",
+    "public": true
+  },
+  "Environment": {
+    "dataSource": "db",
+    "public": true
+  },
+    "TempInstance": {
+    "dataSource": "db",
+    "public": true
+  },
+    "MachineDetails": {
+    "dataSource": "db",
+    "public": true
+  },
+    "BufferedInstances": {
+    "dataSource": "db",
+    "public": true
+  },
+     "Category": {
+    "dataSource": "db",
+    "public": true
+  },
+       "containerMapping": {
+    "dataSource": "db",
+    "public": true
+  },
+     "RunningContainers": {
+    "dataSource": "db",
+    "public": true
+  },
+       "ActiveContainerSessions": {
+    "dataSource": "db",
+    "public": true
+  },
+  "CourseContainerParams": {
+    "dataSource": "db",
+    "public": true
+  },
+  "ContainerPublicIP": {
+    "dataSource": "db",
+    "public": true
+  },
+  
+  
+  
+     "Level": {
+    "dataSource": "db",
+    "public": true
+  },
+  "Email": {
+    "dataSource": "Email"
+  }
+}

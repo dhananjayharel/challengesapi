@@ -1,0 +1,173 @@
+
+{
+  "name": "OnlineTest",
+  "plural": "onlinetests",
+  "base": "PersistedModel",
+  "idInjection": true,
+  "options": {
+    "validateUpsert": true
+  },
+  "properties": {
+    "name": {
+      "type": "string",
+      "required": true
+    },
+
+    "description": {
+      "type": "string",
+      "required": false
+    },
+	 "objective": {
+      "type": "string"
+    },
+	"hints": {
+      "type": "string",
+      "default": ""
+    },
+	"otherNotes": {
+      "type": "string",
+      "default": ""
+    },	
+    "testStatus": {
+      "type": "string"
+    },
+    "environment": {
+      "type": "string",
+      "default": ""
+    },
+    "envId": {
+      "type": "number"
+    },
+	
+    "published": {
+      "type": "boolean",
+      "required": true
+    },
+    "created": {
+      "type": "date",
+      "required": true,
+      "defaultFn": "now"
+    },
+    "updated": {
+      "type": "date",
+      "required": true,
+      "defaultFn": "now"
+    },
+    "duration": {
+      "type": "number"
+    },
+	"level": {
+      "type": "string"
+    },
+		"category": {
+      "type": "string"
+    },
+	"instanceId": {
+      "type": "string",
+      "default": ""
+    },
+	"projectName": {
+      "type": "string",
+      "default": ""
+    },	
+	"enableScreenRecording": {
+      "type": "boolean",
+      "required": false,
+	  "default":false
+    },
+	"enableWebCamRecording": {
+      "type": "boolean",
+      "required": false,
+	  "default":false
+    },
+	"isWebBasedTest": {
+      "type": "boolean",
+      "required": false,
+	  "default":false
+    },
+	"GitHubUrl": {
+      "type": "string",
+      "default": ""
+    },	
+	"isLibraryTest": {
+      "type": "boolean",
+      "required": false,
+	  "default":false
+    },
+	"testType": {
+      "type": "string",
+      "default": ""
+    },
+	"taskId": {
+      "type": "string",
+      "default": ""
+    },
+	"containerName": {
+      "type": "string",
+      "default": ""
+    },
+	"isBasic": {
+      "type": "boolean",
+      "default":false
+    },		
+	    "validations": {
+      "type": []
+    },
+    "relations": { 
+      "user": {
+      "type": "belongsTo",
+      "model": "User",
+      "foreignKey": ""
+    },
+	  "caditates": {
+    "type": "hasMany",
+    "model": "Candidate"
+  }
+    },
+    "acls": {
+      "type": []
+    },
+    "methods": {
+      "type": {}
+    }
+	
+  },
+  "validations": [],
+  "relations": {
+    "user": {
+      "type": "belongsTo",
+      "model": "User",
+      "foreignKey": ""
+    },
+	  "caditates": {
+    "type": "hasMany",
+    "model": "Candidate"
+  },
+  	  "machinedetails": {
+    "type": "hasMany",
+    "model": "MachineDetails"
+  }
+  
+  },
+  "acls": [
+    {
+      "accessType": "*",
+      "principalType": "ROLE",
+      "principalId": "$everyone",
+      "permission": "ALLOW"
+    },
+    {
+      "accessType": "*",
+      "principalType": "ROLE",
+      "principalId": "$authenticated",
+      "permission": "ALLOW"
+    },
+    {
+      "accessType": "WRITE",
+      "principalType": "ROLE",
+      "principalId": "$owner",
+      "permission": "ALLOW"
+    }
+  ],
+  "methods": {}
+}

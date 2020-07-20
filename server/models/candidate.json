@@ -1,0 +1,113 @@
+{
+  "name": "Candidate",
+  "plural": "candidates",
+  "base": "PersistedModel",
+  "idInjection": true,
+  "options": {
+    "validateUpsert": true
+  },
+  "properties": {
+    "fullname": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string",
+      "required": true
+    },
+    "status": {
+      "type": "string",
+      "required": true,
+      "default": "invited"
+    },
+    "solutionUrl": {
+      "type": "string"
+    },
+    "uid": {
+      "type": "number",
+      "required": true
+    },
+    "onlineTestId": {
+      "type": "number",
+      "required": true
+    },
+	 "testStarted": {
+     "type": "boolean",
+	 "default": false
+    },
+    "testToken": {
+      "type": "string",
+	  "default":""
+    },
+	"testAttempted": {
+     "type": "boolean",
+	 "default": false
+    },
+	 "instanceId": {
+      "type": "string",
+	  "default": ""
+    },
+	 "taskId": {
+      "type": "string",
+	  "default": ""
+    },	
+	"launchStarted": {
+      "type": "boolean",
+	  "default": false
+    },
+	"AmiId": {
+      "type": "string",
+	  "default":""
+    },
+	 "testStartTime": {
+      "type": "date",
+      "default": ""
+    },
+	 "score": {
+      "type": "number",
+      "default":-1
+    },
+	"ScreenRecordingUrl": {
+      "type": "string",
+	  "default":""
+    },
+	"LaunchedFromStoppedInstance": {
+      "type": "boolean",
+	  "default": false
+    },
+	"isCloned": {
+      "type": "boolean",
+	  "default": false
+    },
+	"originalTestId": {
+      "type": "number"
+    },
+    "amiDone": {
+     "type": "boolean",
+	 "default": false
+    },
+	"originalTestToken": {
+      "type": "string",
+	  "default":""
+    },
+	"timeline":{
+	"type":["Object"]
+  },
+  	"testcaseSummary":{
+	"type":["Object"]
+  },
+  	"PipeVideoRecordingUrl": {
+      "type": "string",
+	  "default":""
+    }
+  },
+  "validations": [],
+  "relations": {
+  "candidatetest": {
+    "type": "belongsTo",
+    "model": "OnlineTest",
+	"foreignKey": "onlineTestId"
+  }
+  },
+  "acls": [],
+  "methods": {}
+}

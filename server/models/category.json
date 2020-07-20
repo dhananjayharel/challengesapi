@@ -1,0 +1,60 @@
+{
+  "name": "Category",
+  "plural": "Category",
+  "base": "PersistedModel",
+  "idInjection": true,
+  "options": {
+    "validateUpsert": true
+  },
+  "properties": {
+    "name": {
+      "type": "string",
+      "default": ""
+    },
+    "description": {
+      "type": "string"
+    }
+
+},
+  "validations": [],
+  "relations": {
+        "environment": {
+          "type": "hasMany",
+          "model": "Environment",
+          "foreignKey": ""
+        },
+        "onlinetest": {
+          "type": "hasMany",
+          "model": "OnlineTest",
+          "foreignKey": ""
+        }		
+
+  },
+    "acls": [
+	 {
+      "accessType": "*",
+      "principalType": "ROLE",
+      "principalId": "$everyone",
+      "permission": "DENY"
+    },
+    {
+      "accessType": "READ",
+      "principalType": "ROLE",
+      "principalId": "$everyone",
+      "permission": "ALLOW"
+    },
+    {
+      "accessType": "*",
+      "principalType": "ROLE",
+      "principalId": "$authenticated",
+      "permission": "ALLOW"
+    }, 
+    {
+      "accessType": "WRITE",
+      "principalType": "ROLE",
+      "principalId": "$owner",
+      "permission": "ALLOW"
+    }
+  ],
+    "methods": {}
+}

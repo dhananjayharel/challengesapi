@@ -1,0 +1,76 @@
+{
+  "name": "RunningContainers",
+  "plural": "RunningContainers",
+  "base": "PersistedModel",
+  "idInjection": true,
+  "options": {
+    "validateUpsert": true
+  },
+  "properties": {
+    "taskId": {
+      "type": "string",
+      "default": ""
+    },
+    "courseId": {
+      "type": "string"
+    },
+   "taskDef": {
+      "type": "string"
+    },
+   "isAvailable": {
+      "type": "boolean",
+	  "default":false
+    },	
+   "currentStatus": {
+      "type": "string",
+	  "default":"booting"
+    },
+   "nginxPath": {
+      "type": "string",
+	  "default":""
+    },	
+   "isMaster": {
+	"type": "boolean",
+	  "default":false
+    },		
+	"launchTime": {
+      "type": "date",
+      "defaultFn": "now"
+    }	
+},
+  "validations": [],
+  "relations": {	  
+	"activecontainersessions": {
+		"type": "hasMany",
+		"model": "ActiveContainerSessions",
+		"foreignKey": "RunningContainersId"
+	}  	
+  },
+    "acls": [
+	 {
+      "accessType": "*",
+      "principalType": "ROLE",
+      "principalId": "$everyone",
+      "permission": "DENY"
+    },
+    {
+      "accessType": "READ",
+      "principalType": "ROLE",
+      "principalId": "$everyone",
+      "permission": "ALLOW"
+    },
+    {
+      "accessType": "*",
+      "principalType": "ROLE",
+      "principalId": "$everyone",
+      "permission": "ALLOW"
+    }, 
+    {
+      "accessType": "WRITE",
+      "principalType": "ROLE",
+      "principalId": "$everyone",
+      "permission": "ALLOW"
+    }
+  ],
+    "methods": {}
+}
