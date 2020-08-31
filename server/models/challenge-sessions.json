@@ -1,0 +1,96 @@
+{
+  "name": "ChallengeSession",
+  "plural": "challengesessions",
+  "base": "PersistedModel",
+  "idInjection": true,
+  "options": {
+    "validateUpsert": true
+  },
+  "properties": {
+
+    "username": {
+      "type": "string",
+      "default": "NA"
+    },		
+    "ipaddress": {
+      "type": "string",
+      "default": ""
+    },	
+    "email": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "default": "not submitted"
+    },
+    "solutionUrl": {
+      "type": "string"
+    },
+    "uid": {
+      "type": "number"
+    },
+    "onlineTestId": {
+      "type": "number"
+    },
+	 "testStarted": {
+     "type": "boolean",
+	 "default": false
+    },
+    "testToken": {
+      "type": "string",
+	  "default":""
+    },
+	"testAttempted": {
+     "type": "boolean",
+	 "default": false
+    },
+	 "taskId": {
+      "type": "string",
+	  "default": ""
+    },	
+	 "containerIp": {
+      "type": "string",
+	  "default": ""
+    },	
+	 "nginxPath": {
+      "type": "string",
+	  "default": ""
+    },		
+	
+	 "testStartTime": {
+      "type": "date",
+      "defaultFn": "now"
+    },
+	 "testSubmiTime": {
+      "type": "date",
+      "default": ""
+    },	
+	 "score": {
+      "type": "string",
+      "default":""
+    },
+
+	"isCloned": {
+      "type": "boolean",
+	  "default": false
+    },
+
+	"tempdirid": {
+      "type": "string",
+	  "default":""
+    },
+  	"testcaseSummary":{
+	"type":["Object"]
+  }
+  },
+  "validations": [],
+  "relations": {
+  "candidatetest": {
+    "type": "belongsTo",
+    "model": "OnlineTest",
+	"foreignKey": "onlineTestId"
+  }
+  },
+  "acls": [],
+  "methods": {}
+}

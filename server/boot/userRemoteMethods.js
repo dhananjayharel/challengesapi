@@ -36,7 +36,7 @@ module.exports = function(app) {
       });
 
     } else {
-      var url = 'http://www.skillstack.com/app/reset-password';
+      var url = 'http://www.skillstack.com/challenge/reset-password';
       var html = 'Click <a href="' + url + '/' + info.user.id + '/' +
           info.accessToken.id + '">here</a> to reset your password';
       
@@ -71,7 +71,7 @@ module.exports = function(app) {
   User.afterRemote('create', function(context, userInstance, next) {
     console.log('> user.afterRemote triggered');
 
-    console.log(userInstance);
+    //console.log(userInstance);
     var uid = userInstance.id
     console.log('---------------------------')
     var options = {
@@ -85,16 +85,16 @@ module.exports = function(app) {
       user: User 
     };
 
-    console.log(options);
+   // console.log(options);
     console.log('*******************************************')
     userInstance.verify(options, function(err, response) {
       console.log('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5')
-      console.log(options)
+      //console.log(options)
       if (err) {
         console.log('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
         console.log(err)
         console.log('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
-        var url = 'http://www.skillstack.com/app/confirm-account';
+        var url = 'http://www.skillstack.com/challenge/confirm-account';
         var html = 'Thanks for registering an account in SkillStack.<br/>' +
         'Click <a href="' + url + '/' + uid + '/' + options.user.verificationToken +'">here</a> to confirm your account.';
         
@@ -103,7 +103,7 @@ module.exports = function(app) {
           "subject": 'SkillStack: Confirm Account',
           "body": html
         };
-        console.log('HTML MAIL -->>-->>' + html)
+       // console.log('HTML MAIL -->>-->>' + html)
         emailSES.sendMail(mail);
         // return '';
       }

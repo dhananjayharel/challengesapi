@@ -16,6 +16,9 @@ const {CLUSTERIP,CLUSTERNAME} = require('/home/ubuntu/rdplabs_app/rdplabsapi/ser
 const { exec } = require('child_process');
 const stoppedMachinesBufferSize = 50;
 var evalcodesDir = "/home/ubuntu/rdplabs_app/selenium_tests/";
+var Octokat = require('octokat');
+var base64 = require('base-64');
+var octo = new Octokat({token: 'b9f52f60c9093add738f9e3b4dd6ee49f9e0ad19'});
 module.exports = function(Candidate) {
 
 	Candidate.observe('before save', function(ctx, next) {
@@ -1567,21 +1570,23 @@ module.exports = function(Candidate) {
 	 
 	 Candidate.githubPushDemo = function(id,cb){
 		      console.log("githubpush demo");
-					var github = new GithubAPI({token: '8347b2b7377aafda5816be32f4f11d8f484c314f'});
-					var ss = github.setRepo('vilashProgrammr', 'githubapitest');
-					github.setBranch('AWESOME_BRANCH')
+					var github = new GithubAPI({token: 'b9f52f60c9093add738f9e3b4dd6ee49f9e0ad19'});
+					//github.createRepo('test4');
+					var ss = github.setRepo('infoprogrammr', 'test4');
+					github.setBranch('master')
     .then( () => github.pushFiles(
         'Making a commit with my adorable files',
         [
-            {content: 'You are a Wizard, Harry', path: 'file1.txt'},
-            {content: 'May the Force be with you', path: 'jedi.txt'}
+            {content: 'YYou are a \r\nWizard, HarryYou are a \r\nWizard, Harryou are a \r\nWizard, Harry', path: 'file4.txt'},
+            {content: 'May the \r\nForc you2222222222222222222222222222', path: 'jedi.txt'}
         ])
     )
     .then(function() {
         console.log('Files committed!');
+		cb(null,"ok");
     });
 					
-					cb(null,"ok");
+					
 					
 	 
 	 }
@@ -1898,8 +1903,63 @@ req.setTimeout(2000, function() {
 
 		
 	 }
-	 		
+	 
+	 Candidate.getGitHubFileContents = function(githuburl){
+		 repo ="";
+		 username=""
+		 return new Promise(function(resolve, reject){
+			var repo = octo.repos('dhananjayharel', 'echomessage')
+			repo.contents('Challenge.java').read() // Use `.read` to get the raw file.
+				.then((contents) => {        // `.fetch` is used for getting JSON
+				console.log("!!!!!!!!!!!!!"+contents);
+              resolve(contents);
+  
+			}).catch((err)=>{
+				reject(err);
+			}); 
+			 
+		 });
+	 }
+	 
+	 
+	 Candidate.githubtest = function(containerPath, cb) {
 
+var repo = octo.repos('infoprogrammr', 'test2');
+
+var repo = octo.repos('dhananjayharel', 'echomessage');
+
+repo.contents('Challenge.java').read() // Use `.read` to get the raw file.
+.then((contents) => {        // `.fetch` is used for getting JSON
+  console.log("!!!!!!!!!!!!!"+contents);
+  
+  
+});
+
+
+
+repo.contents('README.md').fetch().then((info) =>{
+var config = {
+  message: 'Updating file5555',
+  content: base64.encode('123123\r\nNew file cont\r\nentsfsdffsdf\r\nfsdfsdfsdf\n'),
+  sha:info.sha
+}
+ 
+repo.contents('README.md').add(config)
+.then((info) => {
+  console.log('File Updated. new sha is ', info);
+  cb(null,"ok");
+})}).catch(function(err){console.log("err"+err)});
+/*
+api.commit([{
+  path: 'test/file1.txt',
+  content: '# File1'
+}, {
+  path: 'test/file2.txt',
+  content: '# File2'
+}], 'test commit via api').then(function(data){; // returns a promise
+		    cb(null, "githubapi");
+	 }).catch(function(ee){console.log("EE"+ee);})	*/
+	 }
       	 
 	
 	Candidate.remoteMethod (
@@ -2217,6 +2277,15 @@ req.setTimeout(2000, function() {
         'copychallenge',
         {
           http: {path: '/copychallenge', verb: 'get'},
+          accepts: [{arg: 'containerpath', type: 'string', http: { source: 'query' }},
+		         ],
+          returns:{"type": "json", root:true}
+        });
+		
+						Candidate.remoteMethod (
+        'githubtest',
+        {
+          http: {path: '/githubtest', verb: 'get'},
           accepts: [{arg: 'containerpath', type: 'string', http: { source: 'query' }},
 		         ],
           returns:{"type": "json", root:true}

@@ -43,6 +43,10 @@
       "type": "boolean",
       "required": true
     },
+    "isCloned": {
+      "type": "boolean",
+      "default": false
+    },	
     "created": {
       "type": "date",
       "required": true,

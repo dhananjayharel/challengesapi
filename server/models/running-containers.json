@@ -29,6 +29,10 @@
       "type": "string",
 	  "default":""
     },	
+   "publicIP": {
+      "type": "string",
+	  "default":""
+    },
    "isMaster": {
 	"type": "boolean",
 	  "default":false

@@ -1,4 +1,5 @@
 var GitHub = require('github-api');
+var Promise = require("bluebird");
 function GithubAPI(auth) {
     let repo;
     let filesToCommit = [];
@@ -16,9 +17,16 @@ function GithubAPI(auth) {
      * @return void
      */
     this.setRepo = function(userName, repoName) {
+			
+		
         repo = gh.getRepo(userName, repoName);
     }
-
+	
+	this.createRepo = function(reponame){      
+		return gh.getUser().createRepo({name: reponame}).then((data)=>{
+			console.log("creats"+data);
+		});
+    }
     /**
      * Sets the current branch to make push to. If the branch doesn't exist yet,
      * it will be created first

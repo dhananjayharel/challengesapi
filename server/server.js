@@ -13,7 +13,7 @@ var session = require('express-session');
 var sessionStore = new session.MemoryStore();
 
 var app = module.exports = loopback();
-
+app.set('trust proxy', 'loopback');
 app.use(cookieParser());
 app.use(session({store:sessionStore,secret: "Shh, its a secret!"}));
 

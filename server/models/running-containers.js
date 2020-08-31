@@ -14,7 +14,7 @@ var ecs = new AWS.ECS({apiVersion: '2014-11-13'});
 var CLUSTERNAME = "fargate1";
 var fs = require('fs');
 const { exec } = require('child_process'); 
-
+ var atob = require('atob')
 //nginx config 
 var editorport = "3000";
 var outputport = "4200";
@@ -53,7 +53,7 @@ module.exports = function(RunningContainers) {
 	  
 	 
 	 
-	 RunningContainers.getAvailableContainerHttp = function(courseid,cb){
+	 RunningContainers.getAvailableContainerHttp = function(req,cb){
 		
 			var totalActiveSessions = 0;
 			var totalContainers = 0;
@@ -63,44 +63,20 @@ module.exports = function(RunningContainers) {
 			var activeContainer = [];
 			var masterContainer = [];
 			var promises = [];
+			//
+			const courseid = req.query.courseid;
+			const testId=req.query.testid;
+			const ipaddress = req.query.ipaddrs;
+			var app = RunningContainers.app;
+        var ChallengeSession = app.models.ChallengeSession; 
 			var lastFiveMinutes = new Date(new Date().getTime()-60*5*1000).toISOString();	
 				console.log("OURSEID"+courseid);
 			//hardcode paths
 			if(courseid=="angular"){
 				return cb(null,{"nginxPath":"angular","courseId":"angular"});
 			}
-			else
-			if(courseid=="reactmarvel"){
-				return cb(null,{"nginxPath":"reactmarvel","courseId":"reactmarvel"});
-			}
-			else
-			if(courseid=="dotnet"){
-				return cb(null,{"nginxPath":"lPiW4sGZga1583417","courseId":"dotnet"});
-			}			
-			else
-			if(courseid=="challenges"){
-				return cb(null,{"nginxPath":"challenges","courseId":"challenges"});
-			}
-           else			
-			if(courseid=="reactnative"){
-				return cb(null,{"nginxPath":"reactnative","courseId":"reactnative"});
-			}
-			else
-			if(courseid=="deep_learning"){
-				return cb(null,{"nginxPath":"deep_learning","courseId":"deep_learning"});
-			}
-			else
-			if(courseid=="cppexamples"){
-				return cb(null,{"nginxPath":"cppexamples","courseId":"cppexamples"});
-			}	
-			else
-			if(courseid=="phpexamples"){
-				return cb(null,{"nginxPath":"phpexamples","courseId":"phpexamples"});
-			}			
-			
-			
-			
-			
+				
+
 						
          RunningContainers.find(//{where:{courseId:courseid},	
 		 {where:{or: [
@@ -147,14 +123,40 @@ module.exports = function(RunningContainers) {
 					minSessionContainer = containers[i] ;
 				}	
 				console.log("(container.activecontainersessions.length)()("+i+")()(())()#####="+containers[i].activecontainersessions().length);
-				if(containers[i].activecontainersessions().length<5){
+				if(containers[i].activecontainersessions().length<15){
 				    found = true;
 					RunningContainers.addSessionEntry(containers[i].id);
 					 console.log("min sessions="+minSesssions);
-					cb(null,containers[i]);
-					break;
+					 //send ssh command before sending the path
+					 var timeStamp  = new Date().getTime().toString();
+					 var commandToexec = "sh /home/theia/gitcopy.sh "+testId+" "+timeStamp+"";
+					 RunningContainers.sendSSHCommand(containers[i].publicIp,testId,commandToexec).then(function(data){
+					    console.log("after ssh"+data);
+						console.log("timeStamp"+timeStamp);
+						var session = {};
+						 session.onlineTestId=testId;
+						 session.containerIp=containers[i].publicIp;
+						 session.nginxPath=containers[i].nginxPath;
+						 session.tempdirid=timeStamp; 
+						 containers[i].timestamp=timeStamp;
+						 session.testStarted=true;
+						 session.ipaddress = ipaddress;
+					    console.log("in submit test"+ipaddress);
+
+						 console.log("creating session "+session);
+						 
+						 ChallengeSession.create(session,function(err,dataInstance){
+						 if(err){
+						console.log(err);
+						}
+						console.log('inserted'+JSON.stringify(dataInstance));				
+					     return cb(null,containers[i]); 
+						});	
+					    
+					 });
+					
 				}
-		
+		 
 			 }
 			 	 if(!found){
 			 console.log("didnt find any assign container having min sessions="+minSesssions);
@@ -653,6 +655,7 @@ module.exports = function(RunningContainers) {
 							  instance.currentStatus="running";
 							  instance.nginxPath = editorpath;
 							  instance.taskId = taskId;
+							  instance.publicIp = publicip;
  					 
 							 RunningContainers.upsertWithWhere({taskId:taskId},instance,function(err, res){
 								if(err){console.log("err"+err)}
@@ -662,6 +665,7 @@ module.exports = function(RunningContainers) {
 								var ContainerPublicIP = app.models.ContainerPublicIP;								
 								var data = {};								
 								data.bootingCompleted=true;
+								data.publicIp = publicip;
 								ContainerPublicIP.upsertWithWhere({taskId:taskId},data, function(err,dataInstance){                                   
                                console.log("ContainerPublicIP updatated");                                      
                                //cb(null,instance);                       
@@ -858,11 +862,249 @@ module.exports = function(RunningContainers) {
 		}) 
 		 
 	 }
+	 
+	 RunningContainers.sendSSHCommand = function(publicIp,testId,commandToexec){
+		 // ssh -i /home/ubuntu/rdplabs_app/dockerkeys/dockerkey -o StrictHostKeyChecking=no -i /home/ubuntu/rdplabs_app/dockerkeys/dockerkey -o StrictHostKeyChecking=no root@3.94.145.111 'sh /home/project/gitcopy.sh 963 temp654321230'
+		 var ts = new Date().getTime().toString();
+		 return new Promise(function(resolve,reject){
+			var cmd = "ssh -i /home/ubuntu/rdplabs_app/dockerkeys/dockerkey -o StrictHostKeyChecking=no -i /home/ubuntu/rdplabs_app/dockerkeys/dockerkey -o StrictHostKeyChecking=no root@"+publicIp+" '"+commandToexec+"'"; 
+			console.log("cmd"+cmd);
+			exec(cmd, (err, stdout, stderr) => {
+					if (err) {
+						console.log(`stderr: ${stderr}`);
+						//reject("err");
+						}
+						else{
+							console.log(`stdout: ${stdout}`);
+							resolve(ts);
+						}
+				
+						}); 
+			//resolve("ok");
+			 
+		 });
+			 
+		 }
+		 
+		 
+	 	 RunningContainers.sendSSHCommand2 = function(publicIp,port,testId,commandToexec){
+		 // ssh -i /home/ubuntu/rdplabs_app/dockerkeys/dockerkey -o StrictHostKeyChecking=no -i /home/ubuntu/rdplabs_app/dockerkeys/dockerkey -o StrictHostKeyChecking=no root@3.94.145.111 'sh /home/project/gitcopy.sh 963 temp654321230'
+		 var ts = new Date().getTime().toString();
+		 return new Promise(function(resolve,reject){
+			var cmd = "ssh -i /home/ubuntu/rdplabs_app/dockerkeys/dockerkey -o StrictHostKeyChecking=no -p "+port+" -i /home/ubuntu/rdplabs_app/dockerkeys/dockerkey -o StrictHostKeyChecking=no root@"+publicIp+" '"+commandToexec+"'"; 
+			console.log("cmd"+cmd);
+			exec(cmd, (err, stdout, stderr) => {
+					if (err) {
+						console.log(`stderr: ${stderr}`);
+						//reject("err");
+						}
+						else{
+							console.log(`stdout: ${stdout}`);
+							resolve(ts);
+						}
+				
+						}); 
+			//resolve("ok");
+			 
+		 });
+			 
+		 }
 
-	  
+	  	 
+	 RunningContainers.getAvailableContainerHttp2 = function(req,cb){
+		 // ssh -i /home/ubuntu/rdplabs_app/dockerkeys/dockerkey -o StrictHostKeyChecking=no -i /home/ubuntu/rdplabs_app/dockerkeys/dockerkey -o StrictHostKeyChecking=no root@3.94.145.111 'sh /home/project/gitcopy.sh 963 temp654321230'
+		 var ts = new Date().toISOString();
+	
+		
+		 console.log("requesst.query.test"+req.query.testid); 
+	
+	
+		 //calculate the session duration
+		  var timeStamp  = new Date().getTime().toString();
+					 var commandToexec = "sh /home/theia/gitcopy.sh "+req.query.testid+" "+timeStamp+"";
+		RunningContainers.sendSSHCommand2("52.87.174.142","4444",req.query.testid,commandToexec).then(function(data){
+		    console.log("copied react:"+timeStamp);
+			//create session
+			       var app = RunningContainers.app;
+           var ChallengeSession = app.models.ChallengeSession; 	 
+					var session = {};
+						 session.onlineTestId=req.query.testid;
+						 session.containerIp="52.87.174.142";
+						 session.nginxPath="demo";
+						 session.tempdirid=timeStamp; 
+						 
+						 session.testStarted=true;
+						 session.ipaddress = req.query.ipaddrs;
+					    console.log("in submit test"+req.query.ipaddrs);
+
+						 console.log("creating session "+session);
+						 
+						 ChallengeSession.create(session,function(err,dataInstance){
+						 if(err){
+						console.log(err);
+						}
+						console.log('inserted'+JSON.stringify(dataInstance));	
+                           var obj = {};
+						obj.timestamp = timeStamp;
+						obj.nginxPath = "demo";						
+					     return cb(null,obj); 
+						});	
+			
+			
+			
+			
+         
+						 
+		}); 
+		 
+
+		 } 
+	 	 
+	 RunningContainers.submitTestHttp = function(req,cb){
+		 // ssh -i /home/ubuntu/rdplabs_app/dockerkeys/dockerkey -o StrictHostKeyChecking=no -i /home/ubuntu/rdplabs_app/dockerkeys/dockerkey -o StrictHostKeyChecking=no root@3.94.145.111 'sh /home/project/gitcopy.sh 963 temp654321230'
+		 var ts = new Date().toISOString();
+		 const tmpdir = req.query.tmpdir;
+		 var instance ={};
+		 instance.testSubmiTime = ts;
+		 instance.testAttempted =  true;
+		 console.log("requesst.query.test"+req.query.testid); 
+		 console.log("requesst.query.tmpdir"+req.query.tmpdir); 
+		 console.log("requesst.query.ctid"+req.query.ctid); 
+		 //calculate the session duration
+		 var commandToexec = "sh  /home/theia/gitpush.sh "+req.query.tmpdir+"";
+		RunningContainers.sendSSHCommand(req.query.ctid,req.query.testid,commandToexec).then(function(data){
+		    console.log("code has been pushed now update db"+data);
+            var app = RunningContainers.app;
+           var ChallengeSession = app.models.ChallengeSession; 	 
+			ChallengeSession.upsertWithWhere({tempdirid:tmpdir},instance,function(err, res){
+					if(err){console.log("err"+err);
+						cb(null,"err");
+					}
+					console.log("ChallengeSession updated");	
+					RunningContainers.updateScore(req.query.testid,req.query.tmpdir);
+					cb(null,"ok")
+			}); 
+				
+						 
+		}); 
+		 
+
+		 }
+		 
+		 RunningContainers.submitTestHttp2 = function(req,cb){
+		 // ssh -i /home/ubuntu/rdplabs_app/dockerkeys/dockerkey -o StrictHostKeyChecking=no -i /home/ubuntu/rdplabs_app/dockerkeys/dockerkey -o StrictHostKeyChecking=no root@3.94.145.111 'sh /home/project/gitcopy.sh 963 temp654321230'
+		 var ts = new Date().toISOString();
+		 const tmpdir = req.query.tmpdir;
+		 var instance ={};
+		 instance.testSubmiTime = ts;
+		 instance.testAttempted =  true;
+	
+		 console.log("requesst.query.tmpdir"+req.query.tmpdir); 
+		
+
+            var app = RunningContainers.app;
+           var ChallengeSession = app.models.ChallengeSession; 	 
+			ChallengeSession.upsertWithWhere({tempdirid:tmpdir},instance,function(err, res){
+					if(err){console.log("err"+err);
+						cb(null,"err");
+					}
+					console.log("ChallengeSession updated"+res.onlineTestId);
+		 var commandToexec = "sh  /home/theia/gitpush.sh "+req.query.tmpdir+"";
+		RunningContainers.sendSSHCommand(res.containerIp,res.onlineTestId,commandToexec).then(function(data){
+		    console.log("code has been pushed now update db"+data);
+            RunningContainers.updateScore(res.onlineTestId,req.query.tmpdir); 
+				cb(null,"ok")
+						 
+		}); 
+					
+					
+			}); 
+				
+						 
+	
+		 
+
+		 }
+
+		 RunningContainers.submitTestHttp3 = function(req,cb){
+		 // ssh -i /home/ubuntu/rdplabs_app/dockerkeys/dockerkey -o StrictHostKeyChecking=no -i /home/ubuntu/rdplabs_app/dockerkeys/dockerkey -o StrictHostKeyChecking=no root@3.94.145.111 'sh /home/project/gitcopy.sh 963 temp654321230'
+		 var ts = new Date().toISOString();
+		 const tmpdir = req.query.tmpdir;
+		 var instance ={};
+		 instance.testSubmiTime = ts;
+		 instance.testAttempted =  true;
+	
+		 console.log("requesst.query.tmpdir"+req.query.tmpdir); 
+		
+
+            var app = RunningContainers.app;
+           var ChallengeSession = app.models.ChallengeSession; 	 
+			ChallengeSession.upsertWithWhere({tempdirid:tmpdir},instance,function(err, res){
+					if(err){console.log("err"+err);
+						cb(null,"err");
+					}
+					console.log("ChallengeSession updated"+res.onlineTestId);
+		 var commandToexec = "sh  /home/theia/gitpush.sh "+req.query.tmpdir+"";
+		RunningContainers.sendSSHCommand2(res.containerIp,"4444",res.onlineTestId,commandToexec).then(function(data){	
+		    console.log("code has been pushed now update db"+data);
+     
+				cb(null,"ok")
+						 
+		});  
+					
+					
+			}); 
+				
+						 
+	
+		 
+
+		 }	 		 
 	 
-	 
-	 
+	 RunningContainers.updateScore = function(testId,tmpDir){
+		 
+		 console.log("in updatescore");
+		 console.log("in test"+testId);
+		 console.log("in tmpdir"+tmpDir);
+     var app = RunningContainers.app;
+           var OnlineTest = app.models.OnlineTest; 			 
+		OnlineTest.readGitRepo(testId,tmpDir).then(function(contents){
+			//console.log("testcaseop contents:"+contents);
+		var json = JSON.parse(contents);
+         if(typeof(json.content)!=='undefined'){
+			var contents = atob(json.content);
+			if(/<score>(.*?)<\/score>/.test(contents)){
+				var score = contents.match(/<score>(.*?)<\/score>/);
+				console.log(score[1]);
+				//cb(null,score[1]);
+				var instance ={};
+           //dj instance.score=score[1];
+		   instance.score=score[1];
+            var app = RunningContainers.app;
+           var ChallengeSession = app.models.ChallengeSession; 	 
+			ChallengeSession.upsertWithWhere({tempdirid:tmpDir},instance,function(err, res){
+					if(err){console.log("ChallengeSession score:err"+err);
+						
+					}
+				 	console.log("ChallengeSession score updated"+res);	
+			}); 
+			}
+			else
+				console.log("score is empty");	
+		}
+		else{
+		console.log("dont update");
+		}		
+		
+        			 
+			
+		}).catch((err)=>{
+				console.log("er"+err);
+	
+			})
+		 
+
+	 }
 	 
 	 
 	 
@@ -912,17 +1154,48 @@ module.exports = function(RunningContainers) {
           accepts: [ {arg: 'courseid', type: 'string', http: { source: 'query' } },					
 		         ],
           returns:{"type": "text", root:true}
-        });	
+        });	 
     
 	 RunningContainers.remoteMethod (
         'getAvailableContainerHttp',
         {
           http: {path: '/getavailablecontainerhttp', verb: 'get'},
-          accepts: [ {arg: 'courseid', type: 'string', http: { source: 'query' } },					
+          accepts: [{arg: 'req', type: 'object', http: { source: 'req' }}
 		         ],
           returns:{"type": "text", root:true}
         });	
-	
+	 RunningContainers.remoteMethod (
+        'getAvailableContainerHttp2',
+        {
+          http: {path: '/getavailablecontainerhttp2', verb: 'get'},
+          accepts: [{arg: 'req', type: 'object', http: { source: 'req' }}
+		         ],
+          returns:{"type": "text", root:true}
+        });			
+	 RunningContainers.remoteMethod (
+        'submitTestHttp',
+        {
+          http: {path: '/submittesthttp', verb: 'get'},
+          accepts: [{arg: 'req', type: 'object', http: { source: 'req' }},		
+		         ],
+          returns:{"type": "text", root:true}
+        });			
+	 RunningContainers.remoteMethod (
+        'submitTestHttp2',
+        {
+          http: {path: '/submittesthttp2', verb: 'get'},
+          accepts: [{arg: 'req', type: 'object', http: { source: 'req' }},		
+		         ],
+          returns:{"type": "text", root:true}
+        });	
+	 RunningContainers.remoteMethod (
+        'submitTestHttp3',
+        {
+          http: {path: '/submittesthttp3', verb: 'get'},
+          accepts: [{arg: 'req', type: 'object', http: { source: 'req' }},		
+		         ],
+          returns:{"type": "text", root:true}
+        });			
 		 RunningContainers.remoteMethod (
         'getTaskInfo',
         {

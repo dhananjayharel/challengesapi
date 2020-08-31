@@ -2,7 +2,7 @@
   "db": {
     "name": "db",
     "connector": "memory",
-    "file": "/home/ubuntu/rdplabs_app/rdplabsapi/mydata.json"
+    "file": "/home/ubuntu/rdplabs_app/challengesapi/mydata.json"
   },
   "Email": {
     "name": "Email",

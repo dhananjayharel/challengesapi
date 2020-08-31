@@ -10,6 +10,40 @@ var moment = require('moment');
 var loopback = require('loopback');
 var LoopBackContext = require('loopback-context');
 var https = require('https');
+var base64 = require('base-64');
+var Octokat = require('octokat');
+var octo = new Octokat({token: 'b9f52f60c9093add738f9e3b4dd6ee49f9e0ad19'});
+var GithubAPI = require('../githubApiPush'); 
+ var atob = require('atob')
+//configfiles
+var configfile = {"projectpath":"/home/project/java21days/echotest","projectname":"echotest","setdynamicpath":true,"reloadwindow":true,"showLeftPanel":false,"showRightPanel":true,"showOutline":true};
+var java_pmainfile = {"mainfile":"Challenge.java","compilemenucommand":"javac -classpath '.' Challenge.java","runmenucommand":"java -classpath '.' Challenge","testmenucommand":"> .testcaseop && :> .testcaseop2 && sh ./test.sh > ./.testcaseop","showterminal":true,"showQuestionInPopup":true};
+var python_pmainfile = {"mainfile":"Challenge.py","compilemenucommand":"python3 Challenge.py","runmenucommand":"python3 Challenge.py","testmenucommand":"> .testcaseop && :> .testcaseop2 && sh ./testpy.sh > ./.testcaseop","showterminal":true,"showQuestionInPopup":true};
+var cpp_pmainfile = {"mainfile":"Challenge.cpp","compilemenucommand":"g++ Challenge.cpp && ./a.out","runmenucommand":"g++ Challenge.cpp && ./a.out","testmenucommand":"> .testcaseop && :> .testcaseop2 && sh ./testcpp.sh > ./.testcaseop","showterminal":true,"showQuestionInPopup":true};
+var testsh="#!/usr/bin/env bash\r\n"+
+"a=$(pwd)\r\n"+
+"command='java Challenge'\r\n"+
+"myVar=`echo $a | sed 's/ *$//g'`\r\n"+
+"cd /home/theia\r\n"+ 
+"echo \"Executing the test..\"\r\n"+
+
+":> $myVar/.testcaseop2 &&  java -classpath './json-simple-1.1.1.jar:./' Test  $myVar \"$command\"> $myVar/.testcaseop2\r\n"+
+
+"if grep -q 'error: ' $myVar/.testcaseop2; then\r\n"+
+"   echo \"SYNTAXERROR\"\r\n"+
+"else if grep -q 'Great job' $myVar/.testcaseop2; then\r\n"+
+"   echo \"SUCCESS\"\r\n"+
+"else if grep -q 'Uh-oh' $myVar/.testcaseop2; then\r\n"+
+"   echo \"TESTCASEFAILED\"\r\n"+
+"else\r\n"+
+"   echo \"UNKNOWNERROR\"\r\n"+    
+"fi\r\n"+
+"fi\r\n"+
+"fi\r\n"+
+"echo \"\"\r\n"+
+"echo \"!done!\"";
+
+
 module.exports = function(OnlineTest) {
 
 	OnlineTest.observe('after save', function(ctx, next) {
@@ -20,28 +54,72 @@ module.exports = function(OnlineTest) {
 	  console.log("ctx.isNewInstance="+ctx.isNewInstance);
 	  console.log('supports isNewInstance?', ctx.isNewInstance !== undefined);
 	  if(ctx.isNewInstance){
+		  console.log("Check:: create git repo"+ctx.instance.isCloned);
+						if(ctx.instance.isCloned==false){
 			OnlineTest.moveInstanceToTestBuffer(ctx.instance.envId,ctx.instance.id).
 				then(function(data){
 						console.log("CREATE NEW TEST::: moved stopped machine from env buff"+data);
-						console.log("create git repo");
-							OnlineTest.createGitRepo(ctx.instance.id); 
+						
+							console.log("not a clone test create repo");
+							OnlineTest.createGitRepo(ctx.instance.id).then((data)=>{
+								
+							setTimeout(()=>{	
+								console.log("created"+data);
+							    //now create initial repo
+								OnlineTest.getGitHubFileContents(ctx.instance.GitHubUrl,ctx.instance.category).then((data)=>{
+								//console.log("contents:"+data);	
+								var config = {
+								message: 'Updating',
+								content: base64.encode(data)
+								}
+								var repo = octo.repos('infoprogrammr', ctx.instance.id);
+								repo.contents('Challenge.'+ctx.instance.category).add(config)
+								.then((info) => {
+								 console.log('File Updated ');
+								 //now push other files
+								 var pmainfilecontents = "";
+								 if(ctx.instance.category=="java"){
+									 pmainfilecontents = java_pmainfile;
+								 }
+								 else
+								 if(ctx.instance.category=="py"){
+									 pmainfilecontents = python_pmainfile;
+								 }
+								 else
+								 if(ctx.instance.category=="cpp"){
+									 pmainfilecontents = cpp_pmainfile;
+								 }								 
+									 
+								 var files=[];
+								 files.push( {content: JSON.stringify(ctx.instance.testcases), path: '.testcase.json'});
+								 files.push( {content: JSON.stringify(configfile), path: '.configfile'});								 
+								 files.push( {content: JSON.stringify(pmainfilecontents), path: '.pmainfile'});
+								 files.push( {content: testsh, path: 'test.sh'});
+								 files.push( {content: ctx.instance.problemDefination, path: '.ProblemStatement.html'});
+								 OnlineTest.githubPushOtherFiles(ctx.instance.id,files);
+								//cb(null,"ok");
+								},(err)=>{console.log("err"+err)})	
+									
+								})
+							},1000);//settimeout
+							})
 						}).error(function(){
 							console.log("error in copytest"+err);
 							//cb(null,"err");
 						}).catch(function(e){console.log("E1"+e);cb(null,"err");});
+	               }//iscloned
+				   else{
+					   console.log("for cloned test nothing to do!!!");
+				   }
 						
-						//create again
-						// OnlineTest.moveInstanceToTestBuffer(ctx.instance.envId,ctx.instance.id).
-				// then(function(data){
-						// console.log("CREATE NEW TEST22::: moved stopped machine from env buff222"+data);						
-						// }).error(function(){
-							// console.log("error in copytest22"+err);
-							// //cb(null,"err");
-						// }).catch(function(e){console.log("E1"+e);cb(null,"err");});
 		}
         else if(!ctx.isNewInstance){
 			console.log("update date");
 			ctx.instance.updated = new Date();
+				 var files=[];
+				files.push( {content: JSON.stringify(ctx.instance.testcases), path: '.testcase.json'})
+				files.push( {content: ctx.instance.problemDefination, path: '.ProblemStatement.html'})
+				OnlineTest.githubPushOtherFiles(ctx.instance.id,files);
 		}
           			
 	  next();
@@ -192,30 +270,54 @@ OnlineTest.flushTestBuffer = function(testId){
 			console.log("test copied now move stopped instance");
 			//create repo now
 			console.log("create git repo for new test");
-			OnlineTest.createGitRepo(testJson[0].id); 
-			//copy the candidate
-			
-			// if(copyCandidate)
-			//    OnlineTest.copyCandidateReport(testId,testJson[0].id,currentUserId);
+			OnlineTest.copyGitRepo(testId,testJson[0].id).then(function(data){
+				console.log("copied"+testId);
+			}).catch(function(err){
+				console.log("error in copy");
+			}); 
+	
 
 
-			//console.log(testJson);
-			/* COMMENTED BELOW BECAUSE NEWINSTANCE HOOK WILL HANDLE THIS
-			OnlineTest.moveInstanceToTestBuffer(testJson[0].envId,testJson[0].id).
-						then(function(data){
-							console.log("done copy test now need to add new stopped machine"+data);
-							//OnlineTest.addMachineToEnvBuff(testJson[0].amiid,testJson[0].envId);
-							cb(null,"ok");
-						}).error(function(){
-							console.log("error in copytest"+err);
-							cb(null,"err");
-						}).catch(function(e){console.log("E1"+e);cb(null,"err");})
-						*/ 
-						//cb(null,"ok");
 	}).error(function(){
 					console.log("error in copytest"+err);
 					cb(null,"err");
 					}).catch(function(e){console.log("E1"+e);cb(null,"err");})
+   
+   
+ }
+ 
+ 	//CONE TEST
+	  OnlineTest.cloneTest2 = function(testId,userId=null,copyCandidate) {  
+
+	     var app = OnlineTest.app;
+        var Environment = app.models.Environment; 
+		var currentUserId = userId;
+		console.log("userId="+userId);
+		if(userId == null){
+			var ctx = LoopBackContext.getCurrentContext();  
+			currentUserId = ctx && ctx.get('currentUserId');
+		}
+		
+    console.log("currentUserId="+currentUserId);
+	
+	var clonedEnvId = 999;
+	OnlineTest.copyTest(clonedEnvId,testId,currentUserId,copyCandidate)
+	.then(function(testJson){
+			console.log("test copied now move stopped instance");
+			//create repo now
+			console.log("create git repo for new test");
+			OnlineTest.copyGitRepo(testId,testJson[0].id).then(function(data){
+				console.log("copied"+testId);
+			}).catch(function(err){
+				console.log("error in copy");
+			}); 
+	
+
+
+	}).error(function(){
+					console.log("error in copytest"+err);
+					
+					}).catch(function(e){console.log("E1"+e);})
    
    
  }
@@ -293,17 +395,18 @@ OnlineTest.flushTestBuffer = function(testId){
                 test=instance[i];
                 delete test.id;
                 test.uid=newUserId;
-				if(copyCandidate){
+				if(true){
 					test.name = "Demo Test: "+test.name;
 				}
                 test.id = undefined;
 				var currentTime = new Date();
 				test.created = currentTime;
+				test.isCloned = true;
 				test.updated = currentTime;
 				//test.envId = newEnvId;//xxxxx
 				test.isLibraryTest = false;
 				//test.name = onlineTestName;
-                console.log("######after removing test id"+test.id+"&cloned env"+newEnvId);
+                console.log("######after removing test id"+test.id+"&cloned env");
 			
 					OnlineTest.create(test,function(err,dataInstance){
 							console.log('####inserted'+JSON.stringify(dataInstance));
@@ -725,62 +828,285 @@ OnlineTest.flushTestBuffer = function(testId){
  }
 //Create repository for new tests
  OnlineTest.createGitRepo = function(testId){
+	 
+	return new Promise(function(resolve, reject){
     console.log("inside createGitRepo function"+testId);
-	const options = {
-  hostname: 'api.github.com',
-  path: '/user/repos',
-  method: 'POST',
-  headers: {
-		"user-agent": "node.js",
-        "Content-Type" : "application/json",
-        "Authorization" : "token 8347b2b7377aafda5816be32f4f11d8f484c314f"
-    },
-  timeout: 3000,
-}
+		const options = {
+		hostname: 'api.github.com',
+		path: '/user/repos',
+		method: 'POST',
+		headers: {
+			"user-agent": "node.js",
+			"Content-Type" : "application/json",
+			"Authorization" : "token b9f52f60c9093add738f9e3b4dd6ee49f9e0ad19"
+		},
+		timeout: 3000,
+		}
 
-var postData = { "name":""+testId+"","private":false};
+	var postData = { "name":""+testId+"","private":false};
 
 
-const req = https.request(options, (res) => {
-	console.log("in req status code = "+res.statusCode);
-  console.log(`statusCode: ${res.statusCode}`);
-  //cb(null,{status:res.statusCode});
-  if(res.statusCode=="200"){
-	 console.log("got 200");
-  }
+	const req = https.request(options, (res) => {
+		console.log("in req status code = "+res.statusCode);
+		console.log(`statusCode: ${res.statusCode}`);
+		//cb(null,{status:res.statusCode});
+		if(res.statusCode=="201"){
+			console.log("got 201");
+			resolve("ok");
+	}
   
     res.on("data", function (data) {
         // save all the data from response
-		console.log("got the github response");
-		
-    });
+		console.log("got the github response"+data);
+		//resolve(data);
+		}); 
   
  
-});
-req.on('error', (error) => {
-  console.error("EEEEEE"+error);
-
-});
-req.on('timeout', () => {
-	console.log("aborting the req");
-    req.abort(); 
+	});
+	req.on('error', (error) => {
+	console.error("EEEEEE"+error);
+      reject(err);
+	});
+	req.on('timeout', () => {
+		console.log("aborting the req");
+		reject("timeout");
+		req.abort(); 
 	//cb(null,{status:'-999'})
-});
+	});
 
-req.write(JSON.stringify(postData));
-req.end();
+	req.write(JSON.stringify(postData));
+	req.end();
 
-// TIMEOUT PART
-req.setTimeout(5000, function() {                                                                                                                              
+	// TIMEOUT PART
+	req.setTimeout(5000, function() {                                                                                                                              
     console.log("Server connection timeout (after 1 second)");                                                                                                                  
     req.abort();  
+	reject("aborted");
 	//cb(null,{status:'-99'})
-});
+	});
+ })
+		
+ }
+ 
+ OnlineTest.copyGitRepoHttp = function(testid,cb){
+	 OnlineTest.copyGitRepo(testid).then(function(data){
+		console.log("data"+data);
+		cb(null,"copied");	
+		 
+	 }).catch(function(err){
+		 console.log("err"+err);
+		 cb(null,"err");
+	 })
+	 
+ }
+ 
+ 
+ 
+ //COPY existing repository for new tests
+ OnlineTest.copyGitRepo = function(testId,newTestId){
+	 
+	newTestId = newTestId+"";//xxxxxxxxxxxxxxxxx
+	return new Promise(function(resolve, reject){
+    console.log("inside createGitRepo function"+testId);
+		const options = {
+		hostname: 'api.github.com',
+		path: '/repos/infoprogrammr/'+testId+'/generate',
+		method: 'POST',
+		headers: {
+			"user-agent": "node.js",
+			"Content-Type" : "application/json",
+			"Accept":"application/vnd.github.baptiste-preview+json",
+			"Authorization" : "token b9f52f60c9093add738f9e3b4dd6ee49f9e0ad19"
+		},
+		timeout: 3000,
+		}
+
+	var postData = { "owner": "infoprogrammr","name":newTestId,"private":false,"description":"test"};
+
+
+	const req = https.request(options, (res) => {
+		console.log("in req status code = "+res.statusCode);
+		console.log(`statusCode: ${res.statusCode}`);
+		//cb(null,{status:res.statusCode});
+		if(res.statusCode=="201"){
+			console.log("got 201");
+			resolve("ok");
+	}
+  
+    res.on("data", function (data) {
+        // save all the data from response
+		console.log("got the github response"+data);
+		//resolve(data);
+		}); 
+		
+		res.on("end", function () {
+        // save all the data from response
+		console.log("request ends");
+		resolve("ok");
+		}); 	
+  
+ 
+	});
+	req.on('error', (error) => {
+	console.error("EEEEEE"+error);
+      reject(err);
+	});
+	req.on('timeout', () => {
+		console.log("aborting the req");
+		reject("timeout");
+		req.abort(); 
+	//cb(null,{status:'-999'})
+	});
+
+	req.write(JSON.stringify(postData));
+	req.end();
+
+	// TIMEOUT PART
+	req.setTimeout(5000, function() {                                                                                                                              
+    console.log("Server connection timeout (after 1 second)");                                                                                                                  
+    req.abort();  
+	reject("aborted");
+	//cb(null,{status:'-99'})
+	});
+ })
+		
+ }
+ 
+
+
+	 OnlineTest.getGitHubFileContents = function(githuburl,type){
+		 var split = githuburl.split("/");
+		// var type="java";
+		 var repoName =split[split.length-1];
+		 var username=split[split.length-2];
+		 return new Promise(function(resolve, reject){
+			var repo = octo.repos(username, repoName)
+			repo.contents('Challenge.'+type).read() // Use `.read` to get the raw file.
+				.then((contents) => {        // `.fetch` is used for getting JSON
+				//console.log("!!!!!!!!!!!!!");
+              resolve(contents);
+  
+			}).catch((err)=>{
+				reject(err);
+			}); 
+			 
+		 });
+	 } 
+	 
+	 OnlineTest.getGitHubContents2 = function(testid,tmpdir,cb){
+		 
+
+OnlineTest.readGitRepo(testid,tmpdir).then(function(data){
 	
+	//console.log("dataVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV"+data);
+	var json = JSON.parse(data);
+	if(typeof(json.content)!=='undefined'){
+		var contents = atob(json.content);
+		if(/<score>(.*?)<\/score>/.test(contents)){
+			var score = contents.match(/<score>(.*?)<\/score>/);
+			console.log(score[1]);
+			cb(null,score[1]);
+		}
+		else
+			cb(null,"0");	
+	}
+ else
+	 cb(null,"-99");
+}).catch((err)=>{
 	
-	
-	
- } 
+	console.log("er"+err);
+	cb(null,err);
+})
+
+ 
+	 }
+	 
+	  OnlineTest.readGitRepo = function(testId,tmpdir){
+	 
+	return new Promise(function(resolve, reject){
+    console.log("inside createGitRepo function"+testId);
+	    console.log("inside createGitRepo function:"+tmpdir);
+		const options = {
+		hostname: 'api.github.com',
+		path: '/repos/infoprogrammr/'+testId+'/contents/.testcaseop2?ref='+tmpdir,
+		method: 'GET',
+		headers: {
+			"user-agent": "node.js",
+			"Content-Type" : "application/json",
+			"Authorization" : "token b9f52f60c9093add738f9e3b4dd6ee49f9e0ad19"
+		},
+		timeout: 6000,
+		}
+
+	var postData = { "name":"123","private":false};
+    var responseData = "";
+
+	const req = https.request(options, (res) => {
+		console.log("in req status code = "+res.statusCode);
+		console.log(`statusCode: ${res.statusCode}`);
+		//cb(null,{status:res.statusCode});
+		if(res.statusCode=="201"){
+			console.log("got 201");
+			resolve("ok");
+	}
+  
+    res.on("data", function (data) {
+        // save all the data from response
+		//console.log("got the github response"+data);
+		responseData+= data;
+		//resolve(data);
+		}); 
+		
+	    res.on("end", function () {
+        // save all the data from response
+		console.log("request ends");
+		resolve(responseData);
+		}); 	
+  
+ 
+	});
+	req.on('error', (error) => {
+	console.error("EEEEEE"+error);
+      reject(err);
+	});
+	req.on('timeout', () => {
+		console.log("aborting the req");
+		reject("timeout");
+		req.abort(); 
+	//cb(null,{status:'-999'})
+	});
+
+	req.write(JSON.stringify(postData));
+	req.end();
+
+	// TIMEOUT PART
+	req.setTimeout(5000, function() {                                                                                                                              
+    console.log("Server connection timeout (after 1 second)");                                                                                                                  
+    req.abort();  
+	reject("aborted");
+	//cb(null,{status:'-99'})
+	});
+ })
+		
+ }
+	 
+	 	 
+	 OnlineTest.githubPushOtherFiles = function(repoName,filesArr){
+		      console.log("githubpush demo");
+					var github = new GithubAPI({token: 'b9f52f60c9093add738f9e3b4dd6ee49f9e0ad19'});
+					//github.createRepo('test4');
+					var ss = github.setRepo('infoprogrammr', repoName);
+					github.setBranch('master')
+					.then( () => github.pushFiles('commit2',filesArr))
+					.then(function() {
+						console.log('Files committed!');
+						//cb(null,"ok");
+					});
+					
+					
+					
+	 
+	 }
 	
 
 
@@ -857,12 +1183,29 @@ req.setTimeout(5000, function() {
           returns:{"type": "json", root:true}
         });
 		OnlineTest.remoteMethod (
-        'getConfig',
+        'getConfig', 
         {
           http: {path: '/getconfig', verb: 'get'},
           accepts: {arg: 'testid', type: 'string', http: { source: 'query' } },
           returns:{"type": "json", root:true}
-        });			
+        });	
+	OnlineTest.remoteMethod (
+        'getGitHubContents2',
+        {
+          http: {path: '/getGitHubContents2', verb: 'get'},
+          accepts: [{arg: 'testid', type: 'string', http: { source: 'query' } },
+		  {arg: 'tempdir', type: 'string', http: { source: 'query' } }
+		  ],
+		               
+          returns:{"type": "json", root:true}
+        });		
+				OnlineTest.remoteMethod (
+        'copyGitRepoHttp', 
+        {
+          http: {path: '/copyrepohttp', verb: 'get'},
+          accepts: {arg: 'testid', type: 'string', http: { source: 'query' } },
+          returns:{"type": "json", root:true}
+        });	
    		
-};
+}; 
 		

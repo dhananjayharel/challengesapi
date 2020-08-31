@@ -210,7 +210,15 @@ module.exports = function(Environment) {
            var app = Environment.app;
         var OnlineTest = app.models.OnlineTest; 
         //OnlineTest.cloneTest(286,newUserId,true,cb); 		
-		OnlineTest.cloneTest(780,newUserId,true,cb); 		
+			    OnlineTest.cloneTest2(979,newUserId,true); 
+		OnlineTest.cloneTest2(973,newUserId,true);
+        OnlineTest.cloneTest2(974,newUserId,true); 	
+        OnlineTest.cloneTest2(976,newUserId,true); 
+	
+        setTimeout(function(){
+			console.log("after timeout");
+			cb(null,"ok");
+		},5000);		
 	  
     /*
     Environment.find({where:{uid:1}}, function (err, instance) {                
