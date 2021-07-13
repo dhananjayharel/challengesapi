@@ -105,6 +105,7 @@ module.exports = function(app) {
         };
        // console.log('HTML MAIL -->>-->>' + html)
         emailSES.sendMail(mail);
+		emailSES.nofifyUserRegistered(mail);
         // return '';
       }
       options.user.verificationToken = '###';

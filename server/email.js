@@ -108,6 +108,43 @@ var emailFooter="<br><br><br><p style=\"font-size:13px;color: #435464; font-fami
 			console.log(data);
 		});
 	}
+	
+	function nofifyUserRegistered(Message){
+
+               console.log(Message);
+			   
+		// this sends the email
+		// @todo - add HTML version
+
+		// send to list
+		var from = 'info@programmr.com';
+
+		// this must relate to a verified SES account
+		var to  = [];
+             // to.push(Message.to);
+			 to.push("support@skillstack.com")
+		ses.sendEmail( 
+			{ 
+				Source: from, 
+				Destination: { ToAddresses: to },
+				Message: {
+					Subject: {
+						Data: "New user registered!" 
+					},
+					Body: {
+						Html: {
+							Data: "New User has been registered<br>" + "Email: "+ Message.to + "<br> Platform: Challenges",
+						}
+					}
+				}
+			}
+		, function(err, data) {
+			if(err) throw err
+			console.log('Email sent:');
+			console.log(data);
+		});
+	}
 
 
 exports.sendMail=sendMail;
+exports.nofifyUserRegistered=nofifyUserRegistered;

@@ -12,7 +12,7 @@ var LoopBackContext = require('loopback-context');
 var https = require('https');
 var base64 = require('base-64');
 var Octokat = require('octokat');
-var octo = new Octokat({token: 'b9f52f60c9093add738f9e3b4dd6ee49f9e0ad19'});
+var octo = new Octokat({token: '22d6e1350dbd272fa379030f292a12428b5db95f'});
 var GithubAPI = require('../githubApiPush'); 
  var atob = require('atob')
 //configfiles
@@ -101,7 +101,7 @@ module.exports = function(OnlineTest) {
 								},(err)=>{console.log("err"+err)})	
 									
 								})
-							},1000);//settimeout
+							},2000);//settimeout
 							})
 						}).error(function(){
 							console.log("error in copytest"+err);
@@ -838,7 +838,7 @@ OnlineTest.flushTestBuffer = function(testId){
 		headers: {
 			"user-agent": "node.js",
 			"Content-Type" : "application/json",
-			"Authorization" : "token b9f52f60c9093add738f9e3b4dd6ee49f9e0ad19"
+			"Authorization" : "token 22d6e1350dbd272fa379030f292a12428b5db95f"
 		},
 		timeout: 3000,
 		}
@@ -916,7 +916,7 @@ OnlineTest.flushTestBuffer = function(testId){
 			"user-agent": "node.js",
 			"Content-Type" : "application/json",
 			"Accept":"application/vnd.github.baptiste-preview+json",
-			"Authorization" : "token b9f52f60c9093add738f9e3b4dd6ee49f9e0ad19"
+			"Authorization" : "token 22d6e1350dbd272fa379030f292a12428b5db95f"
 		},
 		timeout: 3000,
 		}
@@ -1033,7 +1033,7 @@ OnlineTest.readGitRepo(testid,tmpdir).then(function(data){
 		headers: {
 			"user-agent": "node.js",
 			"Content-Type" : "application/json",
-			"Authorization" : "token b9f52f60c9093add738f9e3b4dd6ee49f9e0ad19"
+			"Authorization" : "token 22d6e1350dbd272fa379030f292a12428b5db95f"
 		},
 		timeout: 6000,
 		}
@@ -1093,17 +1093,17 @@ OnlineTest.readGitRepo(testid,tmpdir).then(function(data){
 	 	 
 	 OnlineTest.githubPushOtherFiles = function(repoName,filesArr){
 		      console.log("githubpush demo");
-					var github = new GithubAPI({token: 'b9f52f60c9093add738f9e3b4dd6ee49f9e0ad19'});
+					var github = new GithubAPI({token: '22d6e1350dbd272fa379030f292a12428b5db95f'});
 					//github.createRepo('test4');
 					var ss = github.setRepo('infoprogrammr', repoName);
-					github.setBranch('master')
+					github.setBranch('main')
 					.then( () => github.pushFiles('commit2',filesArr))
 					.then(function() {
 						console.log('Files committed!');
 						//cb(null,"ok");
 					});
 					
-					
+					 
 					
 	 
 	 }
